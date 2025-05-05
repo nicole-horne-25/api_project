@@ -10,7 +10,8 @@
 </head>
 <body>
     <h1> US GDP</h1>
-    <h2> Select the year and find out the GDP</h2>
+    <h2>GDP is an amount measure that tells us about the size and productivity of the economy. Let's examine the US's GDP over time.</h2>
+    <h3> Select the year and find out the GDP</h2>
 
     <select id="select-date" name="date">
         <option value="N/A">Pick a year</option>
@@ -47,7 +48,7 @@
       .then(function(data) {
         var gdpData = data.data;
         gdpData.sort(function(a, b) {
-          return a.date.localeCompare(b.date);
+          return a.date.localeCompare(b.date); //tolocale from googling
         });
 
         for (var i = 0; i < gdpData.length; i++) {
@@ -60,7 +61,7 @@
         var years = gdpData.map(function(d) { return d.date; });
         var values = gdpData.map(function(d) { return +d.value; });
 
-        gdpChart = new Chart(ctx, {
+        gdpChart = new Chart(ctx, { //chart help from chatGPT
           type: "line",
           data: {
             labels: years,
@@ -68,7 +69,7 @@
               label: "US Real GDP (Billion USD)",
               data: values,
               fill: false,
-              borderColor: "rgb(75, 192, 192)",
+              borderColor: "rgb(255, 182, 193)",
               tension: 0.1
             }]
           },
