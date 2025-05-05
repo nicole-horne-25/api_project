@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Real GDP</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+        }
+        #display-date {
+            margin-top: 20px;
+            font-size: 1.2em;
+        }
+    </style>
+</head>
+<body>
+    <h1>US GDP</h1>
+    <h2>Select the year and find out the GDP</h2>
+
+    <select id="select-date" name="date">
+        <option value="">Pick a year</option>
+    </select>
+
+    <div id="display-date">
+        <p>Year: <span id="display-year">TODO</span></p>
+        <p>GDP: <span id="display-GDP">TODO</span></p>
+    </div>
+
+    <script>
+        // Prompt for API key
+        let apiKey = sessionStorage.getItem("ALPHAVANTAGE_API_KEY");
+        if (!apiKey) {
+            apiKey = prompt("Please enter your AlphaVantage API key:");
+            sessionStorage.setItem("ALPHAVANTAGE_API_KEY", apiKey);
+        }
+
+        const requestURL = `https://www.alphavantage.co/query?function=REAL_GDP&interval=annual&apikey=${apiKey}`;
+        const selectDate = document.getElementById("select-date");
+        const displayYear = document.getElementById("display-year");
+        const displayGDP = document.getElementById("display-GDP");
+
+        fetch(requestURL)
+            .then(response => response.json())
+            .then(data => {
+                const gdpData = data.data; // 'data' array from API response
+                gdpData.sort((a, b) => b.date.localeCompare(a.date)); // Descending by year
+
+                gdpData.forEach(entry => {
+                    const option = document.createElement("option");
+                    option.value = entry.date;
+                    option.textContent = entry.date;
+                    selectDate.appendChild(option);
+                });
+
+                selectDate.addEventListener("change", function () {
+                    const selectedYear = selectDate.value;
+                    const selectedData = gdpData.find(entry => entry.date === selectedYear);
+
+                    if (selectedData) {
+                        displayYear.textContent = selectedData.date;
+                        displayGDP.textContent = `$${Number(selectedData.value).toLocaleString()} Billion`;
+                    } else {
+                        displayYear.textContent = "TODO";
+                        displayGDP.textContent = "TODO";
+                    }
+                });
+            })
+            .catch(error => {
+                console.error("Error fetching GDP data:", error);
+            });
+    </script>
+</body>
+</html>
