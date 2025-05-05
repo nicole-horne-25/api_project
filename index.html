@@ -1,75 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Real GDP</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            padding: 20px;
-        }
-        #display-date {
-            margin-top: 20px;
-            font-size: 1.2em;
-        }
-    </style>
 </head>
 <body>
-    <h1>US GDP</h1>
-    <h2>Select the year and find out the GDP</h2>
+    <h1> US GDP</h1>
+    <h2> Select the year and find out the GDP</h2>
 
     <select id="select-date" name="date">
-        <option value="">Pick a year</option>
+        <option value="N/A">Pick a year</option>
     </select>
-
     <div id="display-date">
         <p>Year: <span id="display-year">TODO</span></p>
         <p>GDP: <span id="display-GDP">TODO</span></p>
+        
     </div>
 
-    <script>
-        // Prompt for API key
-        let apiKey = sessionStorage.getItem("ALPHAVANTAGE_API_KEY");
+    <canvas id="gdpChart" width="600" height="300"></canvas>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/d3-array@3"></script>
+    <script type="text/javascript">    
+
+        var apiKey = sessionStorage.getItem("ALPHAVANTAGE_API_KEY")
         if (!apiKey) {
-            apiKey = prompt("Please enter your AlphaVantage API key:");
-            sessionStorage.setItem("ALPHAVANTAGE_API_KEY", apiKey);
+            apiKey = prompt("Please enter your AlphaVantage API key:")
+            sessionStorage.setItem("ALPHAVANTAGE_API_KEY", apiKey)
         }
 
-        const requestURL = `https://www.alphavantage.co/query?function=REAL_GDP&interval=annual&apikey=${apiKey}`;
-        const selectDate = document.getElementById("select-date");
-        const displayYear = document.getElementById("display-year");
-        const displayGDP = document.getElementById("display-GDP");
+        var requestURL = "https://www.alphavantage.co/query?function=REAL_GDP&interval=annual&apikey=" + apiKey;
+        var selectDate = document.getElementById("select-date");
+        var displayYear = document.getElementById("display-year");
+        var displayGDP = document.getElementById("display-GDP");
+        var ctx = document.getElementById("gdpChart").getContext("2d");
+        var gdpChart;
 
         fetch(requestURL)
-            .then(response => response.json())
-            .then(data => {
-                const gdpData = data.data; // 'data' array from API response
-                gdpData.sort((a, b) => b.date.localeCompare(a.date)); // Descending by year
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        var gdpData = data.data;
+        gdpData.sort(function(a, b) {
+          return a.date.localeCompare(b.date);
+        });
 
-                gdpData.forEach(entry => {
-                    const option = document.createElement("option");
-                    option.value = entry.date;
-                    option.textContent = entry.date;
-                    selectDate.appendChild(option);
-                });
+        for (var i = 0; i < gdpData.length; i++) {
+          var option = document.createElement("option");
+          option.value = gdpData[i].date;
+          option.textContent = gdpData[i].date;
+          selectDate.appendChild(option);
+        }
 
-                selectDate.addEventListener("change", function () {
-                    const selectedYear = selectDate.value;
-                    const selectedData = gdpData.find(entry => entry.date === selectedYear);
+        var years = gdpData.map(function(d) { return d.date; });
+        var values = gdpData.map(function(d) { return +d.value; });
 
-                    if (selectedData) {
-                        displayYear.textContent = selectedData.date;
-                        displayGDP.textContent = `$${Number(selectedData.value).toLocaleString()} Billion`;
-                    } else {
-                        displayYear.textContent = "TODO";
-                        displayGDP.textContent = "TODO";
-                    }
-                });
-            })
-            .catch(error => {
-                console.error("Error fetching GDP data:", error);
-            });
+        gdpChart = new Chart(ctx, {
+          type: "line",
+          data: {
+            labels: years,
+            datasets: [{
+              label: "US Real GDP (Billion USD)",
+              data: values,
+              fill: false,
+              borderColor: "rgb(75, 192, 192)",
+              tension: 0.1
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: {
+              legend: { display: true }
+            },
+            scales: {
+              y: {
+                title: { display: true, text: "Billion USD" },
+                beginAtZero: false
+              },
+              x: {
+                title: { display: true, text: "Year" }
+              }
+            }
+          }
+        });
+
+        selectDate.addEventListener("change", function() {
+          var selectedYear = selectDate.value;
+          var selectedData = gdpData.find(function(entry) {
+            return entry.date === selectedYear;
+          });
+
+          if (selectedData) {
+            displayYear.textContent = selectedData.date;
+            displayGDP.textContent = "$" + Number(selectedData.value).toLocaleString() + " Billion";
+          } else {
+            displayYear.textContent = "TODO";
+            displayGDP.textContent = "TODO";
+          }
+        });
+      })
+      .catch(function(error) {
+        console.error("Error fetching GDP data:", error);
+      });
     </script>
 </body>
 </html>
